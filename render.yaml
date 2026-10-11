@@ -1,0 +1,31 @@
+services:
+  # 1. Spring Boot 3 & Java 21 REST API Backend
+  - type: web
+    name: ridehub-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        value: https://*.onrender.com,https://*.vercel.app,http://localhost:5173
+
+  # 2. React 18 & Vite Frontend
+  - type: static
+    name: ridehub-frontend
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: ridehub-backend
+          property: host
