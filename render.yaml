@@ -13,7 +13,7 @@ services:
         value: https://*.onrender.com,https://*.vercel.app,http://localhost:5173
 
   # 2. React 18 & Vite Frontend
-  - type: static
+  - type: static_site
     name: ridehub-frontend
     plan: free
     rootDir: frontend
