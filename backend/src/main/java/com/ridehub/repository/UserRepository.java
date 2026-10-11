@@ -71,9 +71,14 @@ public class UserRepository {
         Number key = extractGeneratedId(keyHolder);
         if (key != null) {
             user.setId(key.longValue());
+        } else {
+            try {
+                Long id = jdbcTemplate.queryForObject("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", Long.class, user.getEmail().trim());
+                user.setId(id);
+            } catch (Exception ignored) {}
         }
 
-        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+        if (user.getRoles() != null && !user.getRoles().isEmpty() && user.getId() != null) {
             for (String role : user.getRoles()) {
                 addRole(user.getId(), role);
             }
@@ -83,11 +88,15 @@ public class UserRepository {
 
     private Number extractGeneratedId(KeyHolder keyHolder) {
         if (keyHolder.getKeys() != null) {
-            if (keyHolder.getKeys().containsKey("id")) {
-                return (Number) keyHolder.getKeys().get("id");
+            for (java.util.Map.Entry<String, Object> entry : keyHolder.getKeys().entrySet()) {
+                if ("id".equalsIgnoreCase(entry.getKey()) && entry.getValue() instanceof Number) {
+                    return (Number) entry.getValue();
+                }
             }
-            if (keyHolder.getKeys().containsKey("ID")) {
-                return (Number) keyHolder.getKeys().get("ID");
+            for (Object val : keyHolder.getKeys().values()) {
+                if (val instanceof Number) {
+                    return (Number) val;
+                }
             }
         }
         try {
